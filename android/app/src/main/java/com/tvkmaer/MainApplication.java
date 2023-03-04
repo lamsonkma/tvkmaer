@@ -1,5 +1,5 @@
 package com.tvkmaer;
-
+import com.tvkmaer.packages.UsageStasPackage;
 import android.app.Application;
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
@@ -25,6 +25,7 @@ public class MainApplication extends Application implements ReactApplication {
           List<ReactPackage> packages = new PackageList(this).getPackages();
           // Packages that cannot be autolinked yet can be added manually here, for example:
           // packages.add(new MyReactNativePackage());
+          packages.add(new UsageStasPackage());
           return packages;
         }
 
