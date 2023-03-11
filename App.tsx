@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
@@ -16,6 +16,8 @@ import {
   useColorScheme,
   View,
   NativeModules,
+  Alert,
+  Image,
 } from 'react-native';
 
 import {
@@ -26,17 +28,15 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import messaging from '@react-native-firebase/messaging';
+import notifee, {EventType} from '@notifee/react-native';
+import QRCode from 'react-native-qrcode-svg';
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
 
 function Section({children, title}: SectionProps): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
-
-  NativeModules.UsageStatsModule.getRecentUsageStats(1).then(res =>
-    console.log(res),
-  );
-
   return (
     <View style={styles.sectionContainer}>
       <Text
@@ -63,10 +63,17 @@ function Section({children, title}: SectionProps): JSX.Element {
 
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
-
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+
+  useEffect(() => {
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
+    });
+
+    return unsubscribe;
+  }, []);
 
   return (
     <SafeAreaView style={backgroundStyle}>
@@ -74,30 +81,30 @@ function App(): JSX.Element {
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+      <View
+        // eslint-disable-next-line react-native/no-inline-styles
+        style={{
+          backgroundColor: isDarkMode ? Colors.black : Colors.white,
+          flexDirection: 'row',
+          height: '100%',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+        }}>
+        <View>
+          <Text style={styles.title}>To connect TV vs Smart Phone</Text>
+          <Text style={styles.content}>
+            1. Open the app on the TV and click on the "Connect" button
+          </Text>
+          <Text style={styles.content}>2. Tab on the "Add new device"</Text>
+          <Text style={styles.content}>
+            3.Open the camera on the app and scan the QR code on the TV
+          </Text>
         </View>
-      </ScrollView>
+        <View>
+          <QRCode value="lamson" size={200} />
+        </View>
+        <View />
+      </View>
     </SafeAreaView>
   );
 }
@@ -118,6 +125,17 @@ const styles = StyleSheet.create({
   },
   highlight: {
     fontWeight: '700',
+  },
+
+  title: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#000',
+  },
+  content: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#000',
   },
 });
 

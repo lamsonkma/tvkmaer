@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "864933502652",
+    "project_id": "kmaer-16fed",
+    "storage_bucket": "kmaer-16fed.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:864933502652:android:d9438389c2752455f67ab9",
+        "android_client_info": {
+          "package_name": "com.tvkmaer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "864933502652-q38dq5f5gk18btkuc3if1p1j1tcqh641.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE4oJu_nsKgZoOEBMbrAYAx9YXexlGiPs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "864933502652-q38dq5f5gk18btkuc3if1p1j1tcqh641.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

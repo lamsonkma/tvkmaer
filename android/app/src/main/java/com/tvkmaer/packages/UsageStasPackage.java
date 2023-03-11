@@ -5,6 +5,7 @@ import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
 import com.tvkmaer.packages.UsageStatsModule;
+import com.tvkmaer.packages.PermissionModule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +22,7 @@ public class UsageStasPackage implements ReactPackage {
        List<NativeModule> modules = new ArrayList<>();
         
        modules.add(new UsageStatsModule(reactContext));
-
+       modules.add(new PermissionModule(reactContext));
        return modules;
    }
 }

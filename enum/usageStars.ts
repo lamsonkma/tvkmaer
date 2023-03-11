@@ -1,0 +1,7 @@
+export enum UsageStarsEnum {
+  INTERVAL_WEEKLY = 0,
+  INTERVAL_MONTHLY = 1,
+  INTERVAL_YEARLY = 2,
+  INTERVAL_DAILY = 3,
+  INTERVAL_BEST = 4,
+}
