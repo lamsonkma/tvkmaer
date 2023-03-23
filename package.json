@@ -18,8 +18,10 @@
     "qs": "^6.11.1",
     "react": "18.2.0",
     "react-native": "0.71.3",
+    "react-native-background-actions": "^3.0.0",
     "react-native-qrcode-svg": "^6.2.0",
     "react-native-root-toast": "^3.4.1",
+    "react-native-sqlite-storage": "^6.0.1",
     "react-native-svg": "^13.8.0"
   },
   "devDependencies": {
@@ -31,6 +33,7 @@
     "@types/jest": "^29.2.1",
     "@types/qs": "^6.9.7",
     "@types/react": "^18.0.24",
+    "@types/react-native-sqlite-storage": "^6.0.0",
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^29.2.1",
     "eslint": "^8.19.0",

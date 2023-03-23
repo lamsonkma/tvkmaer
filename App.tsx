@@ -6,7 +6,6 @@
  */
 
 import React, {useEffect} from 'react';
-import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -17,74 +16,101 @@ import {
   View,
   NativeModules,
   Alert,
-  Image,
+  DeviceEventEmitter,
+  TouchableOpacity,
 } from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import BackgroundService from 'react-native-background-actions';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 import messaging from '@react-native-firebase/messaging';
-import notifee, {EventType} from '@notifee/react-native';
-import QRCode from 'react-native-qrcode-svg';
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
 
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import QRCode from 'react-native-qrcode-svg';
+
+const sleep = (time: number) =>
+  new Promise<void>(resolve => setTimeout(() => resolve(), time));
+
+BackgroundService.on('expiration', () => {
+  console.log('expiration');
+});
+
+const taskRandom = async taskData => {
+  const {delay} = taskData;
+  await new Promise(async () => {
+    console.log(BackgroundService.isRunning(), delay);
+    for (let i = 0; BackgroundService.isRunning(); i++) {
+      NativeModules.CurrentAppModule.getCurrentAppInfo(
+        (err: any, result: any) => {
+          if (err) {
+            console.log('err', err);
+          } else {
+            console.log(result);
+          }
+        },
+      );
+
+      await sleep(delay);
+    }
+  });
+};
+
+let playing = BackgroundService.isRunning();
+
+const startService = async () => {
+  playing = !playing;
+  if (playing) {
+    try {
+      await BackgroundService.start(taskRandom, {
+        taskDesc: 'Random task',
+        taskName: 'RandomTaskName',
+        taskTitle: 'Random Task Title',
+        taskIcon: {
+          name: 'ic_launcher',
+          type: 'mipmap',
+        },
+        parameters: {
+          delay: 2000,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+};
 
 function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  // useEffect(() => {
+  //   const unsubscribe = messaging().onMessage(async remoteMessage => {
+  //     Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
+  //   });
+
+  //   return unsubscribe;
+  // }, []);
+
+  // NativeModules.UsageStatsModule.queryWeeklyUsageStats()
+  //   .then(console.log)
+  //   .catch(console.log);
+
+  NativeModules.AppUsageLimitModule.setUsageLimit(
+    'com.tvkmaer',
+    `${Date.now()}`,
+    `${Date.now() + 1 * 60 * 1000}`,
+    (err, result) => {
+      console.log(err, result);
+    },
+  );
 
   useEffect(() => {
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
-      Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
-    });
-
-    return unsubscribe;
+    startService();
   }, []);
-
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
+    <SafeAreaView
+      style={{
+        backgroundColor: '#fffff',
+      }}>
       <View
         // eslint-disable-next-line react-native/no-inline-styles
         style={{
-          backgroundColor: isDarkMode ? Colors.black : Colors.white,
+          backgroundColor: '#fffff',
           flexDirection: 'row',
           height: '100%',
           alignItems: 'center',
@@ -97,12 +123,16 @@ function App(): JSX.Element {
           </Text>
           <Text style={styles.content}>2. Tab on the "Add new device"</Text>
           <Text style={styles.content}>
-            3.Open the camera on the app and scan the QR code on the TV
+            3. Open the camera on the app and scan the QR code on the TV
           </Text>
         </View>
         <View>
-          <QRCode value="lamson" size={200} />
+          <QRCode
+            value="cWfptJUdQoa6Ju1hb_egM5:APA91bGHfRs_ZuzRE7ITkuChspq5UyBKGz7cHnMpTnB5r7cjnHCI4cf3g1OSjC4ohLVmuTE2POSxmd9Rf4J92TVvl-udNnNM4Z9HrlH-O4AKoAKlkE3s0mo0tLorokOlVbuRIYQAi48y"
+            size={200}
+          />
         </View>
+
         <View />
       </View>
     </SafeAreaView>
