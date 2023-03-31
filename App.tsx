@@ -74,7 +74,7 @@ const tasks = [
     taskTitle: 'Task 2 Title',
     taskDesc: 'Task 2',
     task: getCurrentAppRunning,
-    delay: 2000,
+    delay: 1000,
   },
 ];
 

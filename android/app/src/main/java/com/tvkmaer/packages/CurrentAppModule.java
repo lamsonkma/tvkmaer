@@ -22,6 +22,9 @@ import android.content.ComponentName;
 import java.util.List;
 import android.util.Log;
 
+
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.Promise;
 
@@ -91,23 +94,33 @@ public class CurrentAppModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getCurrentAppInfo(Callback callback) {
-        ActivityManager am = (ActivityManager) getCurrentActivity().getSystemService(Context.ACTIVITY_SERVICE);
+        UsageStatsManager usageStatsManager = (UsageStatsManager) getCurrentActivity().getSystemService(Context.USAGE_STATS_SERVICE);
 
-        // Get the current running tasks
-        List<ActivityManager.RunningTaskInfo> taskList = am.getRunningTasks(1);
-        if (taskList != null && !taskList.isEmpty()) {
-            ActivityManager.RunningTaskInfo taskInfo = taskList.get(0);
-            ComponentName componentName = taskInfo.topActivity;
+        // Lấy thời gian hiện tại
+        long currentTime = System.currentTimeMillis();
+    
+        // Lấy thông tin ứng dụng chạy cuối cùng
+        UsageStats lastAppStats = null;
+        List<UsageStats> usageStatsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, currentTime - 1000 , currentTime);
+        if (usageStatsList != null && !usageStatsList.isEmpty()) {
+            for (UsageStats usageStats : usageStatsList) {
+                if (lastAppStats == null || lastAppStats.getLastTimeUsed() < usageStats.getLastTimeUsed()) {
+                    lastAppStats = usageStats;
+                }
+            }
+        }
+    
+        if (lastAppStats != null) {
+            String packageName = lastAppStats.getPackageName();
             PackageManager packageManager = getCurrentActivity().getPackageManager();
             try {
-                ApplicationInfo applicationInfo = packageManager.getApplicationInfo(componentName.getPackageName(), 0);
+                ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
                 String label = (String) packageManager.getApplicationLabel(applicationInfo);
-                String packageName = componentName.getPackageName();
-
+    
                 WritableMap appInfo = Arguments.createMap();
                 appInfo.putString("label", label);
                 appInfo.putString("packageName", packageName);
-
+    
                 callback.invoke(null, appInfo);
             } catch (PackageManager.NameNotFoundException e) {
                 callback.invoke("Unable to get current app info", null);
