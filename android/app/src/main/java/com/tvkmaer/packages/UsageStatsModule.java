@@ -280,13 +280,13 @@ public class UsageStatsModule extends ReactContextBaseJavaModule {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
             byte[] byteArray = byteArrayOutputStream.toByteArray();
-            String encodedBitmap = Base64.encodeToString(byteArray, Base64.DEFAULT);
+            // String encodedBitmap = Base64.encodeToString(byteArray, Base64.DEFAULT);
 
             // Create a map for the app data
             WritableMap appData = new WritableNativeMap();
             appData.putString("name", appName);
             appData.putString("package", packageName);
-            appData.putString("icon", encodedBitmap);
+            // appData.putString("icon", encodedBitmap);
 
             result.pushMap(appData);
         }

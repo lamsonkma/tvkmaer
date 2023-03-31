@@ -10,10 +10,17 @@ import android.os.Build;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.TextView;
 
-public class AppUsageLimitReceiver extends BroadcastReceiver {
+import android.graphics.PixelFormat;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.Arguments;
+
+import com.facebook.react.bridge.ReactContext;
+import android.widget.TextView;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.tvkmaer.MainApplication;
+public class AppUsageLimitReceiver extends BroadcastReceiver {    
     @Override
     public void onReceive(Context context, Intent intent) {
 
@@ -37,9 +44,22 @@ public class AppUsageLimitReceiver extends BroadcastReceiver {
             // Check if the current time is after the end time
             if (currentTime >= endTime) {
                 // Show a toast message to inform the user that the usage limit has been reached
-                Toast.makeText(context,
-                        "Bạn đã đạt giới hạn sử dụng cho gói_" + startTime + "_" + packageName + endTime,
-                        Toast.LENGTH_SHORT).show();
+
+                WritableMap eventParams = Arguments.createMap();
+                eventParams.putString("packageName", packageName);
+
+
+                ReactContext reactContext = ((MainApplication) context.getApplicationContext())
+                .getReactNativeHost()
+                .getReactInstanceManager()
+                .getCurrentReactContext();
+
+                if (reactContext != null) {
+                    reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                            .emit("usageLimitReached", eventParams);
+                }
+
+
             } else if (currentTime < startTime) {
                 // Show a toast message to inform the user that the usage limit has been reached
                 Toast.makeText(context, "Bạn chưa đạt giới hạn sử dụng của gói " + startTime + packageName + endTime,

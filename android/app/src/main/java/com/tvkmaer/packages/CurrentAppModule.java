@@ -18,6 +18,7 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import android.app.Activity;
+import android.content.ComponentName;
 import java.util.List;
 import android.util.Log;
 
@@ -91,33 +92,29 @@ public class CurrentAppModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void getCurrentAppInfo(Callback callback) {
         ActivityManager am = (ActivityManager) getCurrentActivity().getSystemService(Context.ACTIVITY_SERVICE);
-        PackageManager pm = getCurrentActivity().getPackageManager();
-        String packageName = "";
 
         // Get the current running tasks
         List<ActivityManager.RunningTaskInfo> taskList = am.getRunningTasks(1);
         if (taskList != null && !taskList.isEmpty()) {
-            packageName = taskList.get(0).topActivity.getPackageName();
-        }
+            ActivityManager.RunningTaskInfo taskInfo = taskList.get(0);
+            ComponentName componentName = taskInfo.topActivity;
+            PackageManager packageManager = getCurrentActivity().getPackageManager();
+            try {
+                ApplicationInfo applicationInfo = packageManager.getApplicationInfo(componentName.getPackageName(), 0);
+                String label = (String) packageManager.getApplicationLabel(applicationInfo);
+                String packageName = componentName.getPackageName();
 
-        // If package name is null or empty, get the current foreground app
-        if (packageName == null || packageName.isEmpty()) {
-            packageName = am.getRunningAppProcesses().get(0).processName;
-        }
+                WritableMap appInfo = Arguments.createMap();
+                appInfo.putString("label", label);
+                appInfo.putString("packageName", packageName);
 
-        // Get the application label and icon for default apps
-        try {
-            ApplicationInfo appInfo = pm.getApplicationInfo(packageName,
-                    PackageManager.GET_META_DATA);
-            WritableMap appMap = Arguments.createMap();
-            appMap.putString("label", pm.getApplicationLabel(appInfo).toString());
-            appMap.putString("icon", pm.getApplicationIcon(appInfo).toString());
-            appMap.putString("packageName", packageName);
-            callback.invoke(null, appMap);
-        } catch (PackageManager.NameNotFoundException e) {
-            callback.invoke(e.getMessage(), null);
+                callback.invoke(null, appInfo);
+            } catch (PackageManager.NameNotFoundException e) {
+                callback.invoke("Unable to get current app info", null);
+            }
+        } else {
+            callback.invoke("Unable to get current app info", null);
         }
-
     }
 
     private void sendEvent(String packageName) {

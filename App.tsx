@@ -6,25 +6,53 @@
  */
 
 import React, {useEffect} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-  NativeModules,
-  Alert,
-  DeviceEventEmitter,
-  TouchableOpacity,
-} from 'react-native';
+import {NativeModules, NativeEventEmitter} from 'react-native';
 import BackgroundService from 'react-native-background-actions';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {Provider} from 'react-redux';
+import {apiInstance} from './app/axiosClient';
+import {store} from './app/store';
+import {IApplication} from './constants/interfaces';
 
-import messaging from '@react-native-firebase/messaging';
+import {HomeScreen} from './screen/HomeScreen';
+export const getCurrentAppRunning = async (taskData: {delay: number}) => {
+  const {delay} = taskData;
 
-import QRCode from 'react-native-qrcode-svg';
+  for (let i = 0; BackgroundService.isRunning(); i++) {
+    NativeModules.CurrentAppModule.getCurrentAppInfo(
+      (err: any, result: any) => {
+        if (err) {
+          console.log('err', err);
+        } else {
+          console.log(result);
+        }
+      },
+    );
+    await sleep(delay);
+  }
+};
+
+export const getAppInstalled = async (taskData: {delay: number}) => {
+  const {delay} = taskData;
+  const regex = /[^\w\s]/gi;
+  await new Promise(async () => {
+    for (let i = 0; BackgroundService.isRunning(); i++) {
+      let applications =
+        await NativeModules.UsageStatsModule.getInstalledApps();
+
+      applications = applications.map((app: IApplication) => {
+        app.name = app.name.replace(regex, '');
+        return {
+          ...app,
+        };
+      });
+      const res = await apiInstance.post('/application', {
+        applications,
+        token: '879d57d7076efbc5',
+      });
+      await sleep(delay);
+    }
+  });
+};
 
 const sleep = (time: number) =>
   new Promise<void>(resolve => setTimeout(() => resolve(), time));
@@ -33,25 +61,22 @@ BackgroundService.on('expiration', () => {
   console.log('expiration');
 });
 
-const taskRandom = async taskData => {
-  const {delay} = taskData;
-  await new Promise(async () => {
-    console.log(BackgroundService.isRunning(), delay);
-    for (let i = 0; BackgroundService.isRunning(); i++) {
-      NativeModules.CurrentAppModule.getCurrentAppInfo(
-        (err: any, result: any) => {
-          if (err) {
-            console.log('err', err);
-          } else {
-            console.log(result);
-          }
-        },
-      );
-
-      await sleep(delay);
-    }
-  });
-};
+const tasks = [
+  {
+    taskName: 'Task 1',
+    taskTitle: 'Task 1 Title',
+    taskDesc: 'Task 1',
+    task: getAppInstalled,
+    delay: 100000,
+  },
+  {
+    taskName: 'Task 2',
+    taskTitle: 'Task 2 Title',
+    taskDesc: 'Task 2',
+    task: getCurrentAppRunning,
+    delay: 2000,
+  },
+];
 
 let playing = BackgroundService.isRunning();
 
@@ -59,18 +84,20 @@ const startService = async () => {
   playing = !playing;
   if (playing) {
     try {
-      await BackgroundService.start(taskRandom, {
-        taskDesc: 'Random task',
-        taskName: 'RandomTaskName',
-        taskTitle: 'Random Task Title',
-        taskIcon: {
-          name: 'ic_launcher',
-          type: 'mipmap',
-        },
-        parameters: {
-          delay: 2000,
-        },
-      });
+      for (let i = 0; i < tasks.length; i++) {
+        await BackgroundService.start(tasks[i].task, {
+          taskDesc: tasks[i].taskDesc,
+          taskName: tasks[i].taskName,
+          taskTitle: tasks[i].taskTitle,
+          taskIcon: {
+            name: 'ic_launcher',
+            type: 'mipmap',
+          },
+          parameters: {
+            delay: tasks[i].delay,
+          },
+        });
+      }
     } catch (error) {
       console.log(error);
     }
@@ -78,95 +105,48 @@ const startService = async () => {
 };
 
 function App(): JSX.Element {
-  // useEffect(() => {
-  //   const unsubscribe = messaging().onMessage(async remoteMessage => {
-  //     Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
-  //   });
-
-  //   return unsubscribe;
-  // }, []);
-
   // NativeModules.UsageStatsModule.queryWeeklyUsageStats()
   //   .then(console.log)
   //   .catch(console.log);
 
-  NativeModules.AppUsageLimitModule.setUsageLimit(
-    'com.tvkmaer',
-    `${Date.now()}`,
-    `${Date.now() + 1 * 60 * 1000}`,
-    (err, result) => {
-      console.log(err, result);
-    },
-  );
+  // NativeModules.AppUsageLimitModule.setUsageLimit(
+  //   'com.tvkmaer',
+  //   `${Date.now()}`,
+  //   `${Date.now() + 1 * 10 * 1000}`,
+  //   (err: any, result: any) => {
+  //     console.log(err, result);
+  //   },
+  // );
+
+  // useEffect(() => {
+  //   let eventEmitter = new NativeEventEmitter();
+  //   eventEmitter.addListener('usageLimitReached', event => {
+  //     console.log('hello', event); // "someValue"
+  //   });
+  // }, []);
+
+  // NativeModules.UsageStatsModule.queryWeeklyUsageStats().then(
+  //   (res: {usageStats: {[x: string]: {appName: string}}}[]) => {
+  //     const regex = /[^\w\s]/gi;
+
+  //     Object.keys(res[0].usageStats)
+  //       .map(key => res[0].usageStats[key].appName)
+  //       .forEach((appName: string) => {
+  //         if (appName.replace(regex, '') === 'Settings') {
+  //           console.log('hello', appName.replace(regex, '')); // "someValue"
+  //         }
+  //       });
+  //   },
+  // );
 
   useEffect(() => {
     startService();
   }, []);
   return (
-    <SafeAreaView
-      style={{
-        backgroundColor: '#fffff',
-      }}>
-      <View
-        // eslint-disable-next-line react-native/no-inline-styles
-        style={{
-          backgroundColor: '#fffff',
-          flexDirection: 'row',
-          height: '100%',
-          alignItems: 'center',
-          justifyContent: 'space-around',
-        }}>
-        <View>
-          <Text style={styles.title}>To connect TV vs Smart Phone</Text>
-          <Text style={styles.content}>
-            1. Open the app on the TV and click on the "Connect" button
-          </Text>
-          <Text style={styles.content}>2. Tab on the "Add new device"</Text>
-          <Text style={styles.content}>
-            3. Open the camera on the app and scan the QR code on the TV
-          </Text>
-        </View>
-        <View>
-          <QRCode
-            value="cWfptJUdQoa6Ju1hb_egM5:APA91bGHfRs_ZuzRE7ITkuChspq5UyBKGz7cHnMpTnB5r7cjnHCI4cf3g1OSjC4ohLVmuTE2POSxmd9Rf4J92TVvl-udNnNM4Z9HrlH-O4AKoAKlkE3s0mo0tLorokOlVbuRIYQAi48y"
-            size={200}
-          />
-        </View>
-
-        <View />
-      </View>
-    </SafeAreaView>
+    <Provider store={store}>
+      <HomeScreen />
+    </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-
-  title: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#000',
-  },
-  content: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#000',
-  },
-});
 
 export default App;

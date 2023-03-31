@@ -45,7 +45,7 @@ public class AppUsageLimitModule extends ReactContextBaseJavaModule {
         int endAlarmId = packageName.hashCode() + 1;
 
         Context context = reactContext.getApplicationContext();
-        Intent intent = new Intent(context, AppUsageLimitReceiver.class);
+        Intent intent = new Intent(reactContext, AppUsageLimitReceiver.class);
         intent.putExtra("packageName", packageName);
         intent.putExtra("startTime", startTimeMillis);
         intent.putExtra("endTime", endTimeMillis);
@@ -69,5 +69,4 @@ public class AppUsageLimitModule extends ReactContextBaseJavaModule {
 
         callback.invoke("Success");
     }
-
 }
