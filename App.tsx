@@ -6,24 +6,43 @@
  */
 
 import React, {useEffect} from 'react';
-import {NativeModules, NativeEventEmitter} from 'react-native';
+import {NativeModules, NativeEventEmitter, Alert} from 'react-native';
 import BackgroundService from 'react-native-background-actions';
 import {Provider} from 'react-redux';
 import {apiInstance} from './app/axiosClient';
 import {store} from './app/store';
 import {IApplication} from './constants/interfaces';
-
+import messaging from '@react-native-firebase/messaging';
 import {HomeScreen} from './screen/HomeScreen';
 export const getCurrentAppRunning = async (taskData: {delay: number}) => {
   const {delay} = taskData;
 
   for (let i = 0; BackgroundService.isRunning(); i++) {
     NativeModules.CurrentAppModule.getCurrentAppInfo(
-      (err: any, result: any) => {
+      async (err: any, result: any) => {
         if (err) {
           console.log('err', err);
         } else {
-          console.log(result);
+          console.log('App running', result);
+          const rule = await apiInstance.get(
+            `/rule/application/879d57d7076efbc5/${result.packageName}`,
+          );
+          const {data} = rule;
+
+          for (const el of data) {
+            NativeModules.AppUsageLimitModule.setUsageLimit(
+              el.application.package,
+              `${Date.now()}`,
+              el.endTime,
+              (error: any, _res: any) => {
+                if (error) {
+                  console.log(error);
+                } else {
+                  console.log('set limit success', el.application.package);
+                }
+              },
+            );
+          }
         }
       },
     );
@@ -45,13 +64,42 @@ export const getAppInstalled = async (taskData: {delay: number}) => {
           ...app,
         };
       });
-      const res = await apiInstance.post('/application', {
+      await apiInstance.post('/application', {
         applications,
         token: '879d57d7076efbc5',
       });
       await sleep(delay);
     }
   });
+};
+
+export const updateAppUsage = async (taskData: {delay: number}) => {
+  const {delay} = taskData;
+  const usgae = await NativeModules.UsageStatsModule.queryWeeklyUsageStats();
+  const data = usgae.map(
+    (item: {
+      dayOfWeek: any;
+      usageStats: {[x: string]: {totalTimeInForeground: string}};
+    }) => {
+      return {
+        dayOfWeek: item.dayOfWeek,
+        applications: Object.keys(item.usageStats).map((key: any) => {
+          return {
+            packageName: key,
+            totalTimeInForeground: parseInt(
+              item.usageStats[key].totalTimeInForeground,
+              10,
+            ),
+          };
+        }),
+        token: '879d57d7076efbc5',
+      };
+    },
+  );
+  await apiInstance.post('/usage', {
+    data,
+  });
+  await sleep(delay);
 };
 
 const sleep = (time: number) =>
@@ -62,13 +110,13 @@ BackgroundService.on('expiration', () => {
 });
 
 const tasks = [
-  {
-    taskName: 'Task 1',
-    taskTitle: 'Task 1 Title',
-    taskDesc: 'Task 1',
-    task: getAppInstalled,
-    delay: 100000,
-  },
+  // {
+  //   taskName: 'Task 1',
+  //   taskTitle: 'Task 1 Title',
+  //   taskDesc: 'Task 1',
+  //   task: getAppInstalled,
+  //   delay: 100000,
+  // },
   {
     taskName: 'Task 2',
     taskTitle: 'Task 2 Title',
@@ -76,6 +124,13 @@ const tasks = [
     task: getCurrentAppRunning,
     delay: 1000,
   },
+  // {
+  //   taskName: 'Task 3',
+  //   taskTitle: 'Task 3 Title',
+  //   taskDesc: 'Task 3',
+  //   task: updateAppUsage,
+  //   delay: 10000,
+  // },
 ];
 
 let playing = BackgroundService.isRunning();
@@ -105,39 +160,25 @@ const startService = async () => {
 };
 
 function App(): JSX.Element {
-  // NativeModules.UsageStatsModule.queryWeeklyUsageStats()
-  //   .then(console.log)
-  //   .catch(console.log);
-
-  // NativeModules.AppUsageLimitModule.setUsageLimit(
-  //   'com.tvkmaer',
-  //   `${Date.now()}`,
-  //   `${Date.now() + 1 * 10 * 1000}`,
-  //   (err: any, result: any) => {
-  //     console.log(err, result);
-  //   },
-  // );
+  useEffect(() => {
+    let eventEmitter = new NativeEventEmitter();
+    eventEmitter.addListener('usageLimitReached', event => {
+      console.log('hello', event); // "someValue"
+    });
+  }, []);
 
   // useEffect(() => {
-  //   let eventEmitter = new NativeEventEmitter();
-  //   eventEmitter.addListener('usageLimitReached', event => {
-  //     console.log('hello', event); // "someValue"
+  //   const unsubscribe = messaging().onMessage(async remoteMessage => {
+  //     Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
   //   });
+
+  //   return unsubscribe;
   // }, []);
 
-  // NativeModules.UsageStatsModule.queryWeeklyUsageStats().then(
-  //   (res: {usageStats: {[x: string]: {appName: string}}}[]) => {
-  //     const regex = /[^\w\s]/gi;
-
-  //     Object.keys(res[0].usageStats)
-  //       .map(key => res[0].usageStats[key].appName)
-  //       .forEach((appName: string) => {
-  //         if (appName.replace(regex, '') === 'Settings') {
-  //           console.log('hello', appName.replace(regex, '')); // "someValue"
-  //         }
-  //       });
-  //   },
-  // );
+  // messaging().setBackgroundMessageHandler(async remoteMessage => {
+  //   const data = remoteMessage.data;
+  //   console.log('Message handled in the background!', data);
+  // });
 
   useEffect(() => {
     startService();

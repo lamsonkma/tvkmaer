@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "864933502652",
-    "project_id": "kmaer-16fed",
-    "storage_bucket": "kmaer-16fed.appspot.com"
+    "project_number": "721094137465",
+    "project_id": "project-kma",
+    "storage_bucket": "project-kma.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:864933502652:android:d9438389c2752455f67ab9",
+        "mobilesdk_app_id": "1:721094137465:android:1f38b99f69857cc12666a8",
         "android_client_info": {
           "package_name": "com.tvkmaer"
         }
       },
       "oauth_client": [
         {
-          "client_id": "864933502652-q38dq5f5gk18btkuc3if1p1j1tcqh641.apps.googleusercontent.com",
+          "client_id": "721094137465-1kl9p81tmh03ki56rvb3ibt52k7iihtq.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBE4oJu_nsKgZoOEBMbrAYAx9YXexlGiPs"
+          "current_key": "AIzaSyBYICh2XBSJ8wz7SQEI3XFe4MZPPFBddKI"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "864933502652-q38dq5f5gk18btkuc3if1p1j1tcqh641.apps.googleusercontent.com",
+              "client_id": "721094137465-1kl9p81tmh03ki56rvb3ibt52k7iihtq.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -205,7 +205,7 @@ public class UsageStatsModule extends ReactContextBaseJavaModule {
                     WritableMap usageStatsMap = new WritableNativeMap();
                     usageStatsMap.putString("packageName", packageName);
                     usageStatsMap.putString("appName", appName);
-                    usageStatsMap.putDouble("totalTimeInForeground", (double) totalTimeInForeground / 1000);
+                    usageStatsMap.putDouble("totalTimeInForeground", (double) totalTimeInForeground / (1000 * 60));
                     dailyUsageStats.putMap(packageName, usageStatsMap);
                 }
             }
@@ -214,6 +214,8 @@ public class UsageStatsModule extends ReactContextBaseJavaModule {
             dailyStatsMap.putMap("usageStats", dailyUsageStats);
             dailyStatsMap.putString("dayOfWeek", dayOfWeekName);
             weeklyUsageStats.pushMap(dailyStatsMap);
+
+            startTime = endTime;
         }
 
         promise.resolve(weeklyUsageStats);
@@ -222,19 +224,19 @@ public class UsageStatsModule extends ReactContextBaseJavaModule {
     // chuyển các ngày trong tuần sang dạng string
     private String getDayOfWeekName(int dayOfWeek) {
         switch (dayOfWeek) {
-            case 0:
+            case Calendar.SUNDAY:
                 return "Sunday";
-            case 1:
+            case Calendar.MONDAY:
                 return "Monday";
-            case 2:
+            case Calendar.TUESDAY:
                 return "Tuesday";
-            case 3:
+            case Calendar.WEDNESDAY:
                 return "Wednesday";
-            case 4:
+            case Calendar.THURSDAY:
                 return "Thursday";
-            case 5:
+            case Calendar.FRIDAY:
                 return "Friday";
-            case 6:
+            case Calendar.SATURDAY:
                 return "Saturday";
             default:
                 return "";
