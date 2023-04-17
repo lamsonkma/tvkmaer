@@ -63,9 +63,9 @@ public class AppUsageLimitModule extends ReactContextBaseJavaModule {
         alarmManager.set(AlarmManager.RTC_WAKEUP, startTimeMillis, startPendingIntent);
         alarmManager.set(AlarmManager.RTC_WAKEUP, endTimeMillis, endPendingIntent);
 
-        Toast.makeText(context,
-                "Giới hạn sử dụng đã được đặt cho gói vào lúc" + startTimeMillis + packageName,
-                Toast.LENGTH_SHORT).show();
+        // Toast.makeText(context,
+        //         "Giới hạn sử dụng đã được đặt cho gói vào lúc" + startTimeMillis + packageName,
+        //         Toast.LENGTH_SHORT).show();
 
         callback.invoke("Success");
     }

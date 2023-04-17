@@ -8,7 +8,7 @@ import com.tvkmaer.packages.UsageStatsModule;
 import com.tvkmaer.packages.CurrentAppModule;
 import com.tvkmaer.packages.PermissionModule;
 import com.tvkmaer.packages.AppUsageLimitModule;
-
+import com.tvkmaer.packages.KillAppModule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +28,7 @@ public class UsageStasPackage implements ReactPackage {
         modules.add(new PermissionModule(reactContext));
         modules.add(new CurrentAppModule(reactContext));
         modules.add(new AppUsageLimitModule(reactContext));
+        modules.add(new KillAppModule(reactContext));
         return modules;
     }
 }
