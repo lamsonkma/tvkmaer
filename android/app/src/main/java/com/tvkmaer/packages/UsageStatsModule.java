@@ -182,13 +182,15 @@ public class UsageStatsModule extends ReactContextBaseJavaModule {
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
-        long startTime = calendar.getTimeInMillis();
+
 
         Map<String, UsageStats> usageStats;
         WritableArray weeklyUsageStats = new WritableNativeArray();
-
+        long startTime = calendar.getTimeInMillis();
         for (int i = 0; i < 7; i++) {
             String dayOfWeekName = getDayOfWeekName(calendar.get(Calendar.DAY_OF_WEEK));
+                        // calendar.add(Calendar.DATE, 1);
+            startTime = calendar.getTimeInMillis();
             calendar.add(Calendar.DATE, 1);
             long endTime = calendar.getTimeInMillis();
 
@@ -215,7 +217,7 @@ public class UsageStatsModule extends ReactContextBaseJavaModule {
             dailyStatsMap.putString("dayOfWeek", dayOfWeekName);
             weeklyUsageStats.pushMap(dailyStatsMap);
 
-            startTime = endTime;
+            calendar.add(Calendar.DATE, 1);
         }
 
         promise.resolve(weeklyUsageStats);

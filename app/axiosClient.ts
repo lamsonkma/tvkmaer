@@ -5,7 +5,8 @@ import {TOKEN_STORAGE_KEY} from '../constants/storageKey';
 import {Alert} from 'react-native';
 
 export const apiInstance = axios.create({
-  baseURL: 'http://192.168.1.95:3000/v1',
+  baseURL: 'https://bekmaer-production-733e.up.railway.app/v1',
+  // baseURL: 'http://192.168.1.96:3000/v1',
   headers: {
     'Content-Type': 'application/json',
   },

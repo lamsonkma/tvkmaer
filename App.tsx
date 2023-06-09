@@ -1,9 +1,6 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import {LogBox} from 'react-native';
+LogBox.ignoreLogs(['Warning: ...']); // Ignore log notification by message
+LogBox.ignoreAllLogs();
 
 import React, {useEffect} from 'react';
 import {NativeModules, NativeEventEmitter} from 'react-native';
@@ -13,6 +10,9 @@ import {apiInstance} from './app/axiosClient';
 import {store} from './app/store';
 import {IApplication} from './constants/interfaces';
 import {HomeScreen} from './screen/HomeScreen';
+import DeviceInfo from 'react-native-device-info';
+const deviceId = DeviceInfo.getAndroidIdSync() || '879d57d7076efbc5';
+
 export const getCurrentAppRunning = async (taskData: {delay: number}) => {
   const {delay} = taskData;
   for (let i = 0; BackgroundService.isRunning(); i++) {
@@ -23,29 +23,55 @@ export const getCurrentAppRunning = async (taskData: {delay: number}) => {
         } else {
           console.log('App running', result);
           const rule = await apiInstance.get(
-            `/rule/application/879d57d7076efbc5/${result.packageName}`,
+            `/rule/application/${deviceId}/${result.packageName}`,
           );
+
+          const isApplicationSetRules = await apiInstance.get(
+            `/rule/token/${deviceId}`,
+          );
+
+          const isApplicationSetRulesData = isApplicationSetRules.data.map(
+            (item: {application: {package: string}}) => {
+              return item.application.package;
+            },
+          );
+
           const {data} = rule;
-          for (const el of data) {
-            if (result.packageName !== 'com.tvkmaer') {
-              if (
-                Date.now() < Number(el.endTime) &&
-                Date.now() > Number(el.startTime)
-              ) {
-                NativeModules.AppUsageLimitModule.setUsageLimit(
-                  el.application.package,
-                  el.startTime,
-                  el.endTime,
-                  (error: any, _res: any) => {
-                    if (error) {
-                      console.log(error);
-                    } else {
-                      console.log('set limit success', el.application.package);
-                    }
-                  },
-                );
-              } else if (Date.now() < Number(el.startTime)) {
-                NativeModules.AppKillModule.killApp();
+
+          const isCheck = data.filter(
+            (item: {endTime: string; startTime: string}) =>
+              Date.now() < Number(item.endTime) &&
+              Date.now() > Number(item.startTime),
+          );
+          if (
+            !isCheck.length &&
+            isApplicationSetRulesData.includes(result.packageName)
+          ) {
+            console.log('kill app');
+            NativeModules.AppKillModule.killApp();
+          } else {
+            for (const el of data) {
+              if (result.packageName !== 'com.tvkmaer') {
+                if (
+                  Date.now() < Number(el.endTime) &&
+                  Date.now() > Number(el.startTime)
+                ) {
+                  NativeModules.AppUsageLimitModule.setUsageLimit(
+                    el.application.package,
+                    el.startTime,
+                    el.endTime,
+                    (error: any, _res: any) => {
+                      if (error) {
+                        console.log(error);
+                      } else {
+                        console.log(
+                          'set limit success',
+                          el.application.package,
+                        );
+                      }
+                    },
+                  );
+                }
               }
             }
           }
@@ -69,7 +95,7 @@ export const getAppInstalled = async (taskData: {delay: number}) => {
     });
     await apiInstance.post('/application', {
       applications,
-      token: '879d57d7076efbc5',
+      token: deviceId,
     });
     await sleep(delay);
   }
@@ -79,6 +105,7 @@ export const updateAppUsage = async (taskData: {delay: number}) => {
   const {delay} = taskData;
   for (let i = 0; BackgroundService.isRunning(); i++) {
     const usgae = await NativeModules.UsageStatsModule.queryWeeklyUsageStats();
+    console.log('🚀 ', usgae);
     const data = usgae.map(
       (item: {
         dayOfWeek: any;
@@ -95,7 +122,7 @@ export const updateAppUsage = async (taskData: {delay: number}) => {
               ),
             };
           }),
-          token: '879d57d7076efbc5',
+          token: deviceId,
         };
       },
     );
